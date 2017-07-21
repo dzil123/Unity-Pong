@@ -61,6 +61,14 @@ public class Game : MonoBehaviour {
 		m_right_paddle.m_enabled = enabled;
 	}
 	
+	public void SetControl (bool enabled, bool side) {
+		if ( side ) {
+			m_right_paddle.m_enabled = enabled;
+		} else {
+			m_left_paddle.m_enabled = enabled;
+		}
+	}
+	
 	public IEnumerator FunctionTimer(Action func, float delay) {
 		yield return new WaitForSeconds(delay);
 		func();
