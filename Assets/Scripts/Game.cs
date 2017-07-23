@@ -111,6 +111,8 @@ public class Game : MonoBehaviour {
 		
 		angle += m_range_angle * y_offset * -1f;
 		
+		angle = Mathf.Clamp(angle, 1f, 179f); // stops wildly random angles
+		
 		if (side) {
 			angle *= -1f;
 		}
