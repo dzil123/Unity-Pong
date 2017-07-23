@@ -22,7 +22,7 @@ public class HiResScreenShots : MonoBehaviour {
      void LateUpdate() {
          takeHiResShot = Input.GetKeyDown("k");
          if (takeHiResShot) {
-			 Debug.Log("Start");
+			 Debug.Log("Screenshot");
 			 Camera cam = GetComponent<Camera>();
              RenderTexture rt = new RenderTexture(resWidth, resHeight, 24);
              cam.targetTexture = rt;

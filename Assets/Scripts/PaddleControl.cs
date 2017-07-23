@@ -4,23 +4,24 @@ using UnityEngine;
 
 public class PaddleControl : MonoBehaviour {
 	
-	public bool m_enabled		=  true;
+	public bool m_enabled = false; // by default
 	
-	public float m_min_y		= -3.4f;
-	public float m_max_y		=  3.4f;
+	public float m_min_y = -3.4f;
+	public float m_max_y =  3.4f;
 	
-	public float m_speed		=  1.00f; // This is how much it will move per physics tick
+	public float m_speed =  1.00f; // This is how much it will move per physics tick
 	
-	public string m_up_key		=  "up";
-	public string m_down_key	=  "down";
+	public BallControl m_ball;
+	public Game m_game;
 	
-	// Update is called once per frame, FixedUpdate is called once per unit time
-	// Update for timers, FixedUpdate for physics objects
+	public bool m_side;
+	
+	public string m_up_key   = "up";
+	public string m_down_key = "down";
+	
 	void FixedUpdate () {
-		//float h = Input.GetAxis("Vertical"); // GetAxis is -1.0 - 1.0
-		// Use GetAxis and apply force, not translate
 		
-		if (!m_enabled) {
+		if (!m_enabled) { // m_enabled is whether input is enabled
 			return;
 		}
 		
@@ -29,20 +30,18 @@ public class PaddleControl : MonoBehaviour {
 		bool up		= Input.GetKey(m_up_key);
 		bool down	= Input.GetKey(m_down_key);
 		
-		// start
-		
-		bool left	= Input.GetKey("left");
-		bool right	= Input.GetKey("right");
-		// /*
-		if ( left ) {
-			m_speed = m_speed - 0.05f;
-			Debug.Log(m_speed.ToString());
-		} else if ( right ) {
-			m_speed = m_speed + 0.05f;
-		}
-		// */
-		// end
-		
+		/*
+			bool left	= Input.GetKey("left");
+			bool right	= Input.GetKey("right");
+			
+			if ( left ) {
+				m_speed = m_speed - 0.05f;
+				Debug.Log(m_speed.ToString());
+			} else if ( right ) {
+				m_speed = m_speed + 0.05f;
+			}
+		*/
+				
 		if ( up && !down ) {
 			change =  Time.deltaTime;
 		} else if ( down && !up ) {
@@ -65,5 +64,13 @@ public class PaddleControl : MonoBehaviour {
 		
 		transform.position = new Vector3(pos.x, new_y, pos.z);
 	}
-}
 
+	void OnTriggerEnter2D (Collider2D other) {
+		m_game.HitPaddle(m_side);
+		
+	}
+	
+	void OnTriggerStay2D (Collider2D other) {
+		//this.OnTriggerEnter2D(other);
+	}
+}

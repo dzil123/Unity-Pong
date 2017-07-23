@@ -10,8 +10,12 @@ public class SetText : MonoBehaviour {
 	
 	private Text m_text;
 	
-	void Start () {
+	void Awake()
+	{
 		m_text = GetComponent<Text>();
+	}
+	
+	void Start () {
 		Set(m_default_string);
 	}
 	
