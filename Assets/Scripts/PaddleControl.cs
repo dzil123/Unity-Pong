@@ -64,8 +64,14 @@ public class PaddleControl : MonoBehaviour {
 		
 		transform.position = new Vector3(pos.x, new_y, pos.z);
 	}
-
+	
+	public void Reset() {
+		Vector3 pos = transform.position;
+		transform.position = new Vector3(pos.x, 0, pos.z);
+	}
+	
 	void OnTriggerEnter2D (Collider2D other) {
+		//Debug.Log(m_side);
 		m_game.HitPaddle(m_side);
 		
 	}

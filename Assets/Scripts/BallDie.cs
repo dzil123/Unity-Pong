@@ -8,7 +8,7 @@ public class BallDie : MonoBehaviour {
 	public Game m_game; // script Game, pass in GameObject, unity give script
 	
 	void OnTriggerEnter2D (Collider2D other) {
-		
+		//Debug.Log(m_side);
 		m_game.HitEdge(m_side);
 	}
 }
