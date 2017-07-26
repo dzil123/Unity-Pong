@@ -14,41 +14,107 @@ public class Game : MonoBehaviour {
 	public SetText m_left_score_text;
 	public SetText m_right_score_text;
 	
+	public Countdown m_countdown;
+	
 	public float m_middle_angle	= 90f; // 90f is right, 270f is left
 	public float m_range_angle	= 75f;
+	
+	public int m_points_to_win = 5;
 	
 	private int m_left_score = 0;
 	private int m_right_score = 0;
 	
-	private float m_paddle_length = 1f; // change if scale or edge changes for paddle
+	private PaddleController m_paddles;
+	
+	private bool m_side = true;
+	
+	private int m_time = 3;
+	
+	void Awake() {
+		m_paddles = new PaddleController(m_left_paddle, m_right_paddle);
+	}
+	
+	void Start () {
+		//m_countdown.Start_Countdown(5);
+		StartRound(5);
+	}
 	
 	void RestartScene () {
 		SceneManager.LoadScene (SceneManager.GetActiveScene ().name);
 	}
 	
-	void RestartRound () {
-		// idk
+	void StartRound () {
+		StartRound(m_time);
 	}
 	
-	void Start () {
-		SetControl(true);
-		m_ball.begin();
+	void StartRound (int time) {
+		m_ball.ChangeColor(Color.white);
+		Vector3 position = GenerateStartingPosition(m_side);
+		//Debug.Log(position.ToString());
+		m_ball.transform.position = new Vector2(position.x, position.y);
+		m_ball.ChangeAngle(position.z);
+		
+		m_paddles.Reset();
+		m_paddles.SetControl(true);
+		
+		m_countdown.Start_Countdown(time, Begin);
+	}
+	
+	void Begin () {
+		m_ball.ChangeSpeed();
+		
+		m_paddles.SetControl(true);
 	}
 	
 	void Update () {
 		if ( Input.GetKeyDown(KeyCode.Escape) ) {
 			Application.Quit();
 		}
-		UpdateScore();
-		//Debug.Log(m_left_paddle.transform.InverseTransformPoint(m_ball.transform.position).y.ToString());
 	}
 	
 	void FixedUpdate () {
+		/*
+		Vector3 position = GenerateStartingPosition(true);
+		m_ball.transform.position = new Vector2(position.x, position.y);
+		m_ball.ChangeRotation(position.z, 0f);
+		Debug.Log(position.x.ToString());
+		Debug.Log(position.y.ToString());
+		Debug.Log(position.z.ToString());
+		*/
 	}
 	
-	public void UpdateScore () {
-		m_left_score_text.Set( m_left_score );
-		m_right_score_text.Set( m_right_score );
+	public Vector3 GenerateStartingPosition (bool side) {
+		float x = UnityEngine.Random.Range(-4f, -7f);
+		float y = UnityEngine.Random.Range(-4f, 4f);
+		float angle = UnityEngine.Random.Range(30f, 45f);
+		
+		//Debug.Log(x.ToString());
+		//Debug.Log(y.ToString());
+		//Debug.Log(angle.ToString());
+		
+		if (UnityEngine.Random.Range(0f, 0.999999f) > 0.5f) {
+			angle += 90f;
+		}
+		
+		if (side) {
+			//Debug.Log("flipping");
+			x *= -1f;
+			angle *= -1f;
+		}
+		
+		return new Vector3(x, y, angle);
+	} 
+	
+	public void Win (bool side) {
+		
+	}
+	
+	public void TestWin () {
+		if ( m_left_score >= m_points_to_win ) {
+			Win(false);
+		} else if ( m_right_score >= m_points_to_win ){
+			Win(true);
+		}
 	}
 	
 	public void AddPoint ( bool side ) {
@@ -57,29 +123,10 @@ public class Game : MonoBehaviour {
 		} else { 
 			m_left_score += 1;
 		}
-	}
-	
-	public PaddleControl GetPaddle(bool side) {
-		if ( side ) 
-		{
-			//Debug.Log("right");
-			return m_right_paddle;
-		} 
-		else 
-		{
-			//Debug.Log("left");
-			return m_left_paddle;
-		}
-	}
-	
-	public void SetControl (bool enabled) {
-		m_left_paddle.m_enabled = enabled;
-		m_right_paddle.m_enabled = enabled;
-	}
-	
-	public void SetControl (bool enabled, bool side) 
-	{
-		GetPaddle(side).m_enabled = enabled;
+		m_left_score_text.Set( m_left_score );
+		m_right_score_text.Set( m_right_score );
+		
+		TestWin();
 	}
 	
 	public IEnumerator FunctionTimer(Action func, float delay) {
@@ -90,12 +137,17 @@ public class Game : MonoBehaviour {
 	public void HitEdge (bool side) { // false = left, right = true
 		AddPoint(!side);
 		
-		SetControl(false);
+		m_paddles.SetControl(false);
 		
-		m_ball.GetComponent<SpriteRenderer>().color = Color.red;
-		m_ball.GetComponent<Rigidbody2D>().velocity = Vector3.zero;
+		m_ball.ChangeColor(Color.red);
+		m_ball.ChangeSpeed(0);
 		
-		StartCoroutine(FunctionTimer(RestartScene, 2f));
+		m_side = side;
+		m_time = 3;
+		
+		//m_countdown.Start_Countdown(3, StartRound);
+		
+		StartCoroutine(FunctionTimer(StartRound, 1f));
 	}
 	
 	public void HitPaddle (bool side) {	
@@ -104,8 +156,7 @@ public class Game : MonoBehaviour {
 		
 		//Debug.Log(side.ToString());
 		
-		float y_offset = (float)GetPaddle(side).transform.InverseTransformPoint(m_ball.transform.position).y;
-		y_offset = Mathf.Clamp(y_offset/m_paddle_length, -1f, 1f); // account for non-1 paddle size, clamp for weird angles
+		float y_offset = m_paddles.GetYOffset(side, m_ball.transform.position);
 		
 		float angle = m_middle_angle;
 		
@@ -122,6 +173,66 @@ public class Game : MonoBehaviour {
 		//Debug.Log(angle.ToString());
 		
 		m_ball.ChangeRotation(angle, m_ball.m_speed);	
+	}
+}
+
+public class PaddleController {
+	
+	public float m_paddle_length = 1f;
+	
+	private PaddleControl m_left_paddle;
+	private PaddleControl m_right_paddle;
+	
+	public PaddleController(PaddleControl left_paddle, PaddleControl right_paddle) {
+		m_left_paddle = left_paddle;
+		m_right_paddle = right_paddle;
+		Reset();
+	}
+	
+	public PaddleControl GetPaddle(bool side) {
+		if ( side ) 
+		{
+			//Debug.Log("right");
+			return m_right_paddle;
+		} 
+		else 
+		{
+			//Debug.Log("left");
+			return m_left_paddle;
+		}
+	}
+	
+	public void SetControl (bool enabled) {
+		SetControl(enabled, true);
+		SetControl(enabled, false);
+	}
+	
+	public void SetControl (bool enabled, bool side) 
+	{
+		GetPaddle(side).m_enabled = enabled;
+	}
+	
+	public float GetYOffset(bool side, Vector3 pos) {
+		PaddleControl paddle = GetPaddle(side);
+		Vector3 offset = paddle.transform.InverseTransformPoint(pos);
+		float y_offset = offset.y;
+		
+		y_offset = Mathf.Clamp(y_offset/m_paddle_length, -1f, 1f); // account for non-1 paddle size, clamp for weird angles
+		
+		return y_offset;
+	}
+	
+	public float GetYOffset(bool side, float y_pos) {
+		return GetYOffset(side, new Vector3(0f, y_pos, 0f));
+	}
+	
+	public void Reset() {
+		Reset(true);
+		Reset(false);
+	}
+	
+	public void Reset(bool side) {
+		GetPaddle(side).Reset();
 	}
 	
 }

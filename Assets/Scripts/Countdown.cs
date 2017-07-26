@@ -39,7 +39,8 @@ public class Countdown : MonoBehaviour {
 			func();
 			return;
 		}
-		set_time(time + 1);
+		set_time(time);
+		m_text.Set(time);
 		m_action = func;
 	}
 	
@@ -47,7 +48,7 @@ public class Countdown : MonoBehaviour {
 		int time = get_time();
 		time -= 1;
 		set_time(time);
-		Debug.Log(string.Format("start {0}", time.ToString()));
+		Debug.Log(string.Format("tick {0}", time.ToString()));
 		m_text.Set(time);
 	}
 	
